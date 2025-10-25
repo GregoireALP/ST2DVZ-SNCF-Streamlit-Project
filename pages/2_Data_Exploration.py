@@ -5,21 +5,11 @@ from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
 import pandas as pd
 df = get_data()
-# Si process_data retourne un dictionnaire : df = st.session_state.data['main_table']
 
-# ======================
-# HEADER
-# ======================
-st.title("📊 Analyse des retards de trains")
+st.title("📊 Data exploration")
 st.markdown("---")
 
-# ======================
-# GRAPHIQUES
-# ======================
 
-# -----------------------------
-# 1️⃣ Distribution des retards mensuels
-# -----------------------------
 st.header("🔹 Delayed trains by month")
 
 df_monthly = (
@@ -37,9 +27,7 @@ fig_hist = px.bar(
 
 st.plotly_chart(fig_hist, use_container_width=True)
 
-# -----------------------------
-# 2️⃣ Nombre de trains annulés par mois
-# -----------------------------
+
 st.header("🔹 Canceled train by month")
 
 df_annules = df.groupby('Date', as_index=False)['Nombre de trains annulés'].sum()
@@ -53,9 +41,6 @@ fig_annules = px.bar(
 
 st.plotly_chart(fig_annules, use_container_width=True)
 
-# -----------------------------
-# 3️⃣ Top 10 des lignes avec le plus de retard moyen
-# -----------------------------
 st.header("🔹 10 most most delayed station")
 
 df_retards = (
@@ -78,7 +63,7 @@ fig_top10 = px.bar(
 
 st.plotly_chart(fig_top10, use_container_width=True)
 
-st.header("🔹 Acerage delay by routes")
+st.header("🔹 Average delay by routes")
 
 fig1 = px.line(
     df.groupby('Date', as_index=False)['Retard moyen de tous les trains à l\'arrivée'].mean(),
@@ -118,7 +103,6 @@ selected_line = st.selectbox(
     sorted(df['Gare de départ'].unique())
 )
 
-# ---- Filtrage et graphique ----
 filtered_df = df[df['Gare de départ'] == selected_line]
 
 fig = px.line(
@@ -129,34 +113,26 @@ fig = px.line(
     markers=True
 )
 
-# ---- Affichage ----
 st.plotly_chart(fig, use_container_width=True)
 
-# ---- Compute average delay per departure station ----
 avg_delay = (
     df.groupby("Gare de départ", as_index=False)["Retard moyen de tous les trains à l'arrivée"]
     .mean()
     .rename(columns={"Retard moyen de tous les trains à l'arrivée": "Retard moyen"})
 )
 
-# Dataset des gares avec latitude et longitude
 locations = get_station_coord()
 coord_dict = locations.set_index("Gare")[["lat", "lon"]].to_dict(orient="index")
 
-# Calculer le retard moyen par gare de départ
 retard_par_gare = df.groupby("Gare de départ")["Retard moyen de tous les trains au départ"].mean().reset_index()
 
-# Ajouter lat/lon à partir du dictionnaire
 retard_par_gare["lat"] = retard_par_gare["Gare de départ"].apply(lambda x: coord_dict[x]["lat"] if x in coord_dict else None)
 retard_par_gare["lon"] = retard_par_gare["Gare de départ"].apply(lambda x: coord_dict[x]["lon"] if x in coord_dict else None)
 
-# Filtrer les gares sans coordonnées
 retard_par_gare = retard_par_gare.dropna(subset=["lat", "lon"])
 
-# Titre Streamlit
 st.title("Average delay by stations")
 
-# Création de la carte
 fig = px.scatter_mapbox(
     retard_par_gare,
     lat="lat",

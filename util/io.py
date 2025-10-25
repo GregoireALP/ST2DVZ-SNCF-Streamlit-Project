@@ -6,7 +6,7 @@ def load_data():
     """Load and clean data from a CSV file."""
     
     pattern = re.compile(r"^20\d{2}-\d{2}")
-    path = "C:/Users/grego/Documents/GitHub/ST2DVZ-SNCF-Streamlit-Project/data/data.csv"
+    path = "../data/data.csv"
     clean_lines = []
     expected_cols = None
 

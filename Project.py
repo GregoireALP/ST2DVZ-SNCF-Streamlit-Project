@@ -20,6 +20,7 @@ st.set_page_config(
 
 st.title("🚄 Data Storytelling SNCF")
 st.caption('Source: "Régularité mensuelle TGV par liaison" - OPEN DATA SNCF - Open Database License (ODbL)')
+st.caption("https://data.sncf.com/explore/dataset/regularite-mensuelle-tgv-aqst/table/?sort=date")
 
 st.markdown("""
 ## 🎓 Project Overview
@@ -56,5 +57,5 @@ By combining **data science, visualization, and interpretability**, we aim to te
 
 st.markdown("""
 ---
-👩‍💻 **Developed by Grégoire ALPEROVITCH – Data & AI Engineering Track**  
+👩‍💻 **Developed by Grégoire ALPEROVITCH**  
 """)

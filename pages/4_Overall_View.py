@@ -3,17 +3,14 @@ import plotly.graph_objects as go
 import pandas as pd
 from Project import get_data, get_locations, get_station_coord
 
-# ============================================================================
-# DATA PREPARATION
-# ============================================================================
 
+st.set_page_config(page_title="Overall View", page_icon="🔍", layout="wide")
 df = get_data()
 
 # Load station coordinates
 locations = get_station_coord()  # DataFrame with columns: Gare, lat, lon
 coord_dict = locations.set_index("Gare")[["lat", "lon"]].to_dict(orient="index")
 
-# Calculate statistics by departure station
 stats_by_station = df.groupby("Gare de départ").agg({
     "Retard moyen de tous les trains au départ": ["mean", "std"],
     "Nombre de circulations prévues": "sum",
@@ -22,7 +19,6 @@ stats_by_station = df.groupby("Gare de départ").agg({
     "Retard moyen des trains en retard au départ": "mean"
 }).reset_index()
 
-# Flatten multi-index columns
 stats_by_station.columns = [
     "Station",
     "Average Delay",
@@ -50,7 +46,6 @@ stats_by_station["lon"] = stats_by_station["Station"].map(
     lambda x: coord_dict.get(x, {}).get("lon", None)
 )
 
-# Filter stations without coordinates
 stations_without_coords = stats_by_station[stats_by_station["lat"].isna()]
 if len(stations_without_coords) > 0:
     with st.expander(f"⚠️ {len(stations_without_coords)} station(s) without GPS coordinates"):
@@ -71,15 +66,10 @@ def categorize_delay(delay):
 
 stats_by_station["Category"] = stats_by_station["Average Delay"].apply(categorize_delay)
 
-# ============================================================================
-# STREAMLIT INTERFACE
-# ============================================================================
+
 st.title("🗺️ Interactive Delay Map by Departure Station")
 st.markdown("### Geographic Analysis of TGV Network Punctuality")
 
-# ============================================================================
-# FILTERS AND CONTROLS
-# ============================================================================
 col_filter1, col_filter2 = st.columns(2)
 
 with col_filter1:
@@ -100,7 +90,6 @@ with col_filter2:
     st.caption("🗺️ Map Style: Carto Dark Matter")
     st.caption("🌈 Color Scale: Turbo")
 
-# Advanced filters
 st.markdown("---")
 col_slider1, col_slider2, col_slider3 = st.columns(3)
 
@@ -141,9 +130,6 @@ filtered_data = stats_by_station[
     (stats_by_station["Category"].isin(categories_filter))
 ].copy()
 
-# ============================================================================
-# KEY PERFORMANCE INDICATORS
-# ============================================================================
 st.markdown("---")
 kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
 
@@ -186,9 +172,7 @@ with kpi5:
             delta_color="inverse"
         )
 
-# ============================================================================
-# INTERACTIVE MAP
-# ============================================================================
+
 st.markdown("---")
 
 # Create custom hover text
@@ -208,7 +192,6 @@ filtered_data["hover_text"] = filtered_data.apply(
     axis=1
 )
 
-# Normalize bubble sizes
 max_size = 50
 min_size = 10
 size_values = filtered_data[size_metric]
@@ -220,7 +203,6 @@ if size_values.max() > 0:
 else:
     normalized_sizes = [min_size] * len(filtered_data)
 
-# Create the map
 fig = go.Figure()
 
 fig.add_trace(go.Scattermapbox(
@@ -267,9 +249,6 @@ fig.update_layout(
 
 st.plotly_chart(fig, use_container_width=True)
 
-# ============================================================================
-# DETAILED TABLE
-# ============================================================================
 st.markdown("---")
 st.subheader("📊 Station Rankings")
 
@@ -365,9 +344,7 @@ st.dataframe(
     }
 )
 
-# ============================================================================
-# KEY INSIGHTS
-# ============================================================================
+
 st.markdown("---")
 st.subheader("💡 Key Insights")
 

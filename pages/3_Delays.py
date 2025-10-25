@@ -6,17 +6,10 @@ from plotly.subplots import make_subplots
 from Project import get_data, get_station_coord
 import numpy as np
 
-# ============================================================================
-# PAGE CONFIGURATION
-# ============================================================================
 st.set_page_config(page_title="Deep Dive Analysis", page_icon="🔍", layout="wide")
 
 df = get_data()
 
-
-# ============================================================================
-# DATA PREPARATION
-# ============================================================================
 
 # Extract temporal features
 df['Year'] = df['Date'].dt.year
@@ -36,10 +29,6 @@ df['Punctuality_Rate'] = 100 - (df['Nombre de trains en retard à l\'arrivée'] 
 df['Cancellation_Rate'] = (df['Nombre de trains annulés'] / 
                            df['Nombre de circulations prévues'] * 100)
 
-# ============================================================================
-# NARRATIVE HEADER
-# ============================================================================
-
 st.markdown("""
 <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
             padding: 3rem; border-radius: 15px; color: white; margin-bottom: 2rem;'>
@@ -50,9 +39,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ============================================================================
-# INTRODUCTION - THE HYPOTHESIS
-# ============================================================================
 
 st.markdown("---")
 st.header("📖 The Story")
@@ -95,10 +81,6 @@ with col2:
     Summer delays cost an estimated **2.5 million minutes** of passenger time annually.
     """)
 
-# ============================================================================
-# PART 1: DISCOVERING THE PATTERN
-# ============================================================================
-
 st.markdown("---")
 st.header("📊 Part 1: Discovering the Pattern")
 
@@ -122,7 +104,6 @@ monthly_stats['Month_Name'] = monthly_stats['Month'].map(
     dict(zip(range(1, 13), month_names))
 )
 
-# Create visualization
 fig1 = make_subplots(
     rows=2, cols=1,
     subplot_titles=('Average Delay by Month', 'Punctuality Rate by Month'),
@@ -148,7 +129,6 @@ fig1.add_trace(
     row=1, col=1
 )
 
-# Add summer highlight
 fig1.add_vrect(
     x0=5.5, x1=8.5, 
     fillcolor="orange", opacity=0.2, 
@@ -156,7 +136,6 @@ fig1.add_vrect(
     row=1, col=1
 )
 
-# Bottom plot: Punctuality rate
 fig1.add_trace(
     go.Scatter(
         x=monthly_stats['Month_Name'],
@@ -170,14 +149,12 @@ fig1.add_trace(
     row=2, col=1
 )
 
-# Add reference line at 85%
 fig1.add_hline(
     y=85, line_dash="dash", line_color="red",
     annotation_text="Target: 85%", annotation_position="right",
     row=2, col=1
 )
 
-# Add summer highlight
 fig1.add_vrect(
     x0=5.5, x1=8.5, 
     fillcolor="orange", opacity=0.2,
@@ -230,9 +207,6 @@ with col3:
         delta_color="normal"
     )
 
-# ============================================================================
-# PART 2: WHICH ROUTES ARE AFFECTED?
-# ============================================================================
 
 st.markdown("---")
 st.header("🗺️ Part 2: Route-Level Analysis")
@@ -244,13 +218,11 @@ While the summer effect is widespread, some routes experience much more dramatic
 Let's identify the most vulnerable connections.
 """)
 
-# Calculate route-level seasonal performance
 route_seasonal = df.groupby(['Gare de départ', 'Gare d\'arrivée', 'Season']).agg({
     'Retard moyen de tous les trains à l\'arrivée': 'mean',
     'Nombre de circulations prévues': 'sum'
 }).reset_index()
 
-# Pivot to compare summer vs other seasons
 route_pivot = route_seasonal.pivot_table(
     index=['Gare de départ', 'Gare d\'arrivée'],
     columns='Season',
@@ -258,7 +230,6 @@ route_pivot = route_seasonal.pivot_table(
     aggfunc='mean'
 ).reset_index()
 
-# Calculate summer impact
 if 'Summer' in route_pivot.columns and 'Winter' in route_pivot.columns:
     route_pivot['Summer_Impact'] = route_pivot['Summer'] - route_pivot['Winter']
     route_pivot['Impact_Pct'] = (route_pivot['Summer_Impact'] / route_pivot['Winter'] * 100)
@@ -274,7 +245,6 @@ if 'Summer' in route_pivot.columns and 'Winter' in route_pivot.columns:
     top_affected = route_pivot.nlargest(15, 'Summer_Impact')
     top_affected['Route'] = top_affected['Gare de départ'].str[:15] + ' → ' + top_affected['Gare d\'arrivée'].str[:15]
     
-    # Visualization
     fig2 = go.Figure()
     
     fig2.add_trace(go.Bar(
@@ -315,10 +285,6 @@ if 'Summer' in route_pivot.columns and 'Winter' in route_pivot.columns:
     compared to winter baseline.
     """)
 
-# ============================================================================
-# PART 3: ROOT CAUSE ANALYSIS
-# ============================================================================
-
 st.markdown("---")
 st.header("🔬 Part 3: Understanding the Root Causes")
 
@@ -352,7 +318,6 @@ cause_names = {
 seasonal_causes = df.groupby('Season')[cause_columns].mean().T
 seasonal_causes.index = [cause_names[col] for col in cause_columns]
 
-# Create stacked bar chart
 fig3 = go.Figure()
 
 seasons = ['Winter', 'Spring', 'Summer', 'Fall']
@@ -417,10 +382,6 @@ with col2:
         This represents the most significant operational challenge during peak season.
         """)
 
-# ============================================================================
-# PART 4: THE BUSINESS IMPACT
-# ============================================================================
-
 st.markdown("---")
 st.header("💰 Part 4: Quantifying the Impact")
 
@@ -478,10 +439,6 @@ with col4:
         f"{trains_over_threshold:,.0f}",
         help="Trains exceeding compensation threshold"
     )
-
-# ============================================================================
-# CONCLUSION & RECOMMENDATIONS
-# ============================================================================
 
 st.markdown("---")
 st.header("💡 Conclusions & Recommendations")
